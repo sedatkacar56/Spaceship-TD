@@ -507,7 +507,21 @@ const TOWERS = [
     size: 26,
     desc: 'Supreme firepower, slow',
     sellFactor: 0.6
+  },
+   {
+    id: 'juggernaut',
+    name: 'Juggernaut',
+    cost: 5000,
+    damage: 400,
+    range: 1000,
+    fireRate: 2.0,
+    bulletSpeed: 520,
+    color: '#ffffff',
+    size: 30,
+    desc: 'longest range',
+    sellFactor: 0.4
   }
+
 ];
 
 // ─────────────────────────────────────────────
@@ -634,7 +648,7 @@ document.getElementById('lose-menu-btn').addEventListener('click', returnToMenu)
 const MODES = {
   easy:   { cash: 1000, lives: 200, waves: 30 },
   medium: { cash: 700,  lives: 150, waves: 60 },
-  hard:   { cash: 500,  lives: 100, waves: 80 }
+  hard:   { cash: 500,  lives: 100, waves: 90 }
 };
 
 function startGame(mode) {
@@ -1458,6 +1472,30 @@ function drawShipShape(ctx, x, y, size, angle, color, id) {
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath(); ctx.arc(0, 0, s*0.3, 0, Math.PI*2); ctx.fill();
       break;
+case 'juggernaut':
+  // Juggernaut - wide armored hull with side cannons
+  ctx.beginPath();
+  ctx.moveTo(0, -s);
+  ctx.lineTo(s*0.3, -s*0.8);
+  ctx.lineTo(s*1.1, -s*0.4);
+  ctx.lineTo(s*1.1, s*0.2);
+  ctx.lineTo(s*0.7, s*0.5);
+  ctx.lineTo(s*0.4, s);
+  ctx.lineTo(-s*0.4, s);
+  ctx.lineTo(-s*0.7, s*0.5);
+  ctx.lineTo(-s*1.1, s*0.2);
+  ctx.lineTo(-s*1.1, -s*0.4);
+  ctx.lineTo(-s*0.3, -s*0.8);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // Armored core
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath(); ctx.arc(0, 0, s*0.35, 0, Math.PI*2); ctx.fill();
+  // Front cannon tip
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.beginPath(); ctx.arc(0, -s*0.75, s*0.15, 0, Math.PI*2); ctx.fill();
+  break;
+	  
     default:
       ctx.beginPath();
       ctx.moveTo(0, -s); ctx.lineTo(s*0.5, s*0.5); ctx.lineTo(-s*0.5, s*0.5);
