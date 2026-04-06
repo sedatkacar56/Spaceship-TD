@@ -513,13 +513,39 @@ const TOWERS = [
     name: 'Juggernaut',
     cost: 5000,
     damage: 400,
-    range: 1000,
+    range: 10000,
     fireRate: 2.0,
     bulletSpeed: 520,
     color: '#ffffff',
     size: 30,
     desc: 'longest range',
     sellFactor: 0.4
+  },
+   {
+    id: 'minigunner',
+    name: 'Mini gunner',
+    cost: 10000,
+    damage: 10,
+    range: 150,
+    fireRate: 100.0,
+    bulletSpeed: 700,
+    color: '#00aa00',
+    size: 40,
+    desc: 'fast shooting',
+    sellFactor: 0.4
+  },
+   {
+    id: 'mainbase',
+    name: 'Main base',
+    cost: 100000,
+    damage: 10000000,
+    range: 250,
+    fireRate: 100.0,
+    bulletSpeed: 600,
+    color: '#00aa00',
+    size: 80,
+    desc: 'its the central base',
+    sellFactor: 0.7
   }
 
 ];
@@ -728,7 +754,8 @@ function drawTowerIcon(tower, iconCanvas) {
   const c = iconCanvas.getContext('2d');
   const cx = 14, cy = 14, s = tower.size * 0.55;
   c.clearRect(0, 0, 28, 28);
-  drawShipShape(c, cx, cy, s, 0, tower.color, tower.id);
+  const angle = tower.id === 'mainbase' ? 0 : -Math.PI / 2;
+  drawShipShape(c, cx, cy, s, angle, tower.color, tower.id);
 }
 
 function updateShopAffordability() {
@@ -798,6 +825,47 @@ canvas.addEventListener('contextmenu', e => {
   document.querySelectorAll('.tower-card').forEach(c => c.classList.remove('selected'));
 });
 
+
+let mainbaseActive = false;
+let mainbaseInterval = null;
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  if (!gameState) return;
+
+  if (!mainbaseActive) {
+    mainbaseActive = true;
+    flashMessage('MAIN BASE FIRING!');
+    mainbaseInterval = setInterval(() => {
+      if (!gameState) return;
+     // Tower shooting
+  for (const t of gameState.towers) {
+        if (t.towerType !== 'mainbase') continue;
+        let target = null;
+        let bestProgress = -1;
+        for (const e2 of gameState.enemies) {
+          if (e2.dead || e2.reached) continue;
+          const dist = Math.hypot(t.x - e2.x, t.y - e2.y);
+          if (dist <= t.range && e2.progress > bestProgress) {
+            bestProgress = e2.progress;
+            target = e2;
+          }
+        }
+        if (target) {
+          fireBullet(t, target);
+        }
+      }
+    }, 1000 / 1.0); // fires at fireRate 1.0
+  } else {
+    mainbaseActive = false;
+    clearInterval(mainbaseInterval);
+    flashMessage('MAIN BASE STOPPED');
+  }
+});
+
+
+
+
 function placeTower(x, y) {
   const def = TOWERS.find(t => t.id === gameState.selectedShopTower);
   if (!def || def.cost > gameState.cash) return;
@@ -814,6 +882,7 @@ function placeTower(x, y) {
     ...def,
     x, y,
     id: Date.now() + Math.random(),
+	towerType: def.id,  
     angle: 0,
     cooldown: 0,
     totalSpent: def.cost
@@ -963,6 +1032,7 @@ function update(dt) {
   for (const t of gameState.towers) {
     t.cooldown -= dt;
     if (t.cooldown > 0) continue;
+if (t.towerType === 'mainbase') continue;
     // Find target: first enemy in range
     let target = null;
     let bestProgress = -1;
@@ -1087,17 +1157,20 @@ function moveEnemyAlongPath(e, dt) {
   }
 }
 
+// REPLACE WITH:
 function fireBullet(tower, target) {
   const angle = Math.atan2(target.y - tower.y, target.x - tower.x);
+  const bx = tower.towerType === 'mainbase' ? tower.x + tower.size * 0.55 : tower.x;
+  const by = tower.towerType === 'mainbase' ? tower.y - tower.size * 0.1 : tower.y;
   gameState.bullets.push({
-    x: tower.x,
-    y: tower.y,
+    x: bx,
+    y: by,
     angle,
     speed: tower.bulletSpeed,
     damage: tower.damage,
     color: tower.color,
     life: 3,
-    size: tower.id === 'dreadnought' ? 6 : 4
+    size: tower.towerType === 'dreadnought' ? 6 : tower.towerType === 'juggernaut' ? 12 : 4
   });
 }
 
@@ -1181,8 +1254,9 @@ function render() {
       ctx.fillStyle = 'rgba(0,212,255,0.05)';
       ctx.fill();
     }
-    drawShipShape(ctx, t.x, t.y, t.size, t.angle - Math.PI/2, t.color, t.id);
-  }
+const drawAngle = t.towerType === 'mainbase' ? 0 : -Math.PI/2;
+drawShipShape(ctx, t.x, t.y, t.size, drawAngle, t.color, t.towerType);
+	}
 
   // Ghost placement
   if (gameState.placing && gameState.selectedShopTower) {
@@ -1195,7 +1269,8 @@ function render() {
     ctx.strokeStyle = onPath ? 'rgba(255,68,102,0.5)' : 'rgba(0,212,255,0.3)';
     ctx.lineWidth = 1;
     ctx.stroke();
-    drawShipShape(ctx, gameState.mouseX, gameState.mouseY, def.size, -Math.PI/2, onPath ? '#ff4466' : def.color, def.id);
+const ghostAngle = def.id === 'mainbase' ? 0 : -Math.PI/2;
+    drawShipShape(ctx, gameState.mouseX, gameState.mouseY, def.size, ghostAngle, onPath ? '#ff4466' : def.color, def.id);
     ctx.globalAlpha = 1;
   }
 
@@ -1472,7 +1547,9 @@ function drawShipShape(ctx, x, y, size, angle, color, id) {
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath(); ctx.arc(0, 0, s*0.3, 0, Math.PI*2); ctx.fill();
       break;
-case 'juggernaut':
+	 
+  
+  case 'juggernaut':
   // Juggernaut - wide armored hull with side cannons
   ctx.beginPath();
   ctx.moveTo(0, -s);
@@ -1495,6 +1572,67 @@ case 'juggernaut':
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.beginPath(); ctx.arc(0, -s*0.75, s*0.15, 0, Math.PI*2); ctx.fill();
   break;
+  
+case 'minigunner':
+  // Crown body
+  ctx.beginPath();
+  ctx.moveTo(-s*1.1, s*0.5);       // bottom-left
+  ctx.lineTo(-s*1.1, -s*0.1);      // left side up
+  ctx.lineTo(-s*0.5, -s*0.9);      // left peak top
+  ctx.lineTo(-s*0.15, -s*0.3);     // valley between peaks
+  ctx.lineTo(s*0.15, -s*0.3);      // valley (flat)
+  ctx.lineTo(s*0.5, -s*0.9);       // right peak top
+  ctx.lineTo(s*1.1, -s*0.1);       // right side up
+  ctx.lineTo(s*1.1, s*0.5);        // bottom-right
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Center gun barrel (rectangle going up)
+  ctx.fillStyle = 'green';
+  ctx.fillRect(-s*0.18, -s*1.5, s*0.36, s*1.1);
+  ctx.strokeRect(-s*0.18, -s*1.5, s*0.36, s*1.1);
+  break;
+  
+case 'mainbase':
+  // Red trapezoid base (thruster)
+  ctx.fillStyle = 'red';
+  ctx.beginPath();
+  ctx.moveTo(-s*0.6, s*0.5);   // bottom-left
+  ctx.lineTo(s*0.6, s*0.5);    // bottom-right
+  ctx.lineTo(s*0.4, s*0.1);    // top-right
+  ctx.lineTo(-s*0.4, s*0.1);   // top-left
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Gray square body
+  ctx.fillStyle = '#aaa';
+  ctx.fillRect(-s*0.55, -s*0.4, s*1.1, s*0.55);
+  ctx.strokeRect(-s*0.55, -s*0.4, s*1.1, s*0.55);
+
+  // Gun barrel sticking LEFT (black rectangle)
+  ctx.fillStyle = '#222';
+  ctx.fillRect(-s*1.2, -s*0.2, s*0.7, s*0.2);
+  ctx.strokeRect(-s*1.2, -s*0.2, s*0.7, s*0.2);
+
+  // Triangle top (outer)
+  ctx.fillStyle = '#aaa';
+  ctx.beginPath();
+  ctx.moveTo(0, -s*1.0);       // tip
+  ctx.lineTo(-s*0.55, -s*0.4); // bottom-left
+  ctx.lineTo(s*0.55, -s*0.4);  // bottom-right
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Triangle inner detail (light blue window)
+  ctx.fillStyle = 'lightblue';
+  ctx.beginPath();
+  ctx.moveTo(0, -s*0.75);
+  ctx.lineTo(-s*0.3, -s*0.42);
+  ctx.lineTo(s*0.3, -s*0.42);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  break;
+  
 	  
     default:
       ctx.beginPath();
