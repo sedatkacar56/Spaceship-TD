@@ -1,0 +1,56 @@
+====================================================
+SPACESHIP-TD (STELLAR DEFENSE) - SESSION REMINDER
+Date: April 6, 2026
+====================================================
+
+LIVE URL: https://sedatkacar56.github.io/Spaceship-TD/
+
+----------------------------------------------------
+WHAT WAS DONE
+----------------------------------------------------
+The game was already deployed on GitHub Pages.
+Added PWA (Progressive Web App) support so users can
+add it to their phone/tablet home screen and play
+fullscreen like a native app.
+
+FILES ADDED/CHANGED:
+1. index.html
+   - Added PWA meta tags:
+       apple-mobile-web-app-capable
+       apple-mobile-web-app-status-bar-style
+       apple-mobile-web-app-title
+       mobile-web-app-capable
+       theme-color
+   - Added apple-touch-icon (uses iconeymen.png)
+   - Added link to manifest.json
+
+2. manifest.json (NEW FILE)
+   - App name: Stellar Defense
+   - Display: fullscreen
+   - Orientation: landscape
+   - Background/theme color: #02040f (dark space color)
+   - Icon: iconeymen.png
+
+----------------------------------------------------
+HOW TO ADD TO HOME SCREEN
+----------------------------------------------------
+iPhone (must use Safari):
+  1. Open https://sedatkacar56.github.io/Spaceship-TD/
+  2. Tap Share button (box with arrow)
+  3. Tap "Add to Home Screen"
+  4. Tap Add
+
+Android (Chrome):
+  - Chrome shows install banner automatically
+  - Or: 3-dot menu -> Add to Home Screen
+
+Result: Game opens fullscreen, no browser bar, like a native app.
+
+----------------------------------------------------
+PROJECT FILES
+----------------------------------------------------
+index.html      - Full game (single file, all code inside)
+manifest.json   - PWA manifest for Android/Chrome
+iconeymen.png   - App icon for home screen
+README.md       - GitHub repo readme
+====================================================
